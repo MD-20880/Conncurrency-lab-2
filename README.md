@@ -36,7 +36,7 @@ Recall the producer-consumer problem that was introduced in the lectures. Open `
   
 - **Consumer:** Reads an integer from the buffer every 0s-5s.
 
-The example output below demonstrates the **correct** output. Note how a given value in the buffer does not get overwritten until it was read by the consumer.
+The example output below demonstrates the **correct** output. Note how a given value in the buffer does not get overwritten until it was read by the consumer. The buffer being used is a circular buffer and is printed in the following format `${contents length start_index end_index}`.
 
 ```bash
 $ go run pc.go
