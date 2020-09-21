@@ -1,4 +1,4 @@
-# Lab 4: Beyond Channels
+# Concurrency Lab 2
 
 > If you're stuck look at examples on [Go by Example](https://gobyexample.com/)
 
