@@ -2,7 +2,22 @@
 
 > If you're stuck look at examples on [Go by Example](https://gobyexample.com/)
 
-## Question 1 - Random sum
+## Using the lab sheet
+
+There are two ways to use the lab sheet, you can either:
+
+- [create a new repo from this template](https://github.com/UoB-CSA/intro-to-go-lab-2/generate) - **this is the recommended way**
+- download a [zip file](https://github.com/UoB-CSA/intro-to-go-lab-2/archive/master.zip)
+
+Each question is rated to help you balance your work:
+
+- :red_circle::white_circle::white_circle::white_circle::white_circle: - Easy, strictly necessary.
+- :red_circle::red_circle::white_circle::white_circle::white_circle: - Medium, still necessary.
+- :red_circle::red_circle::red_circle::white_circle::white_circle: - Hard, necessary if you're aiming for higher marks.
+- :red_circle::red_circle::red_circle::red_circle::white_circle: - Hard, useful for coursework extensions.
+- :red_circle::red_circle::red_circle::red_circle::red_circle: - Hard, beyond what you need for any part of the coursework.
+
+## Question 1 - Random sum :red_circle::red_circle::white_circle::white_circle::white_circle:
 
 Open `sum.go`. It's a small program that uses 1000 goroutines to increment the `sum` variable. The correct output of the program should be 1000 since `sum` is initialised to 0 and each of the 1000 goroutines increments it by 1.
 
@@ -26,7 +41,7 @@ The bug in `sum.go` is a race condition.
 
 One way of fixing this problem is to add `runtime.GOMAXPROCS(1)` at the beginning of `main()`. This is not a good solution, but why does it work correctly?
 
-## Question 2 - Producer-consumer problem
+## Question 2 - Producer-consumer problem :red_circle::red_circle::red_circle::white_circle::white_circle:
 
 Recall the producer-consumer problem that was introduced in the lectures. Open `pc.go`. It uses 2 producers and 1 consumer. The correct behaviour should be as follows:
 
@@ -160,7 +175,7 @@ func main() {
 
 How might you improve the buffer methods such that the program is more efficient
 
-## Question 3 - Bank
+## Question 3 - Bank :red_circle::red_circle::red_circle::red_circle::white_circle:
 
 ### Introduction
 
