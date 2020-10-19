@@ -130,7 +130,7 @@ Look at the example output above. The consumer has just read `995`. State the ne
 
 The skeleton you were given will not produce the output shown above. The `consumer()` and `producer()` functions are not properly implemented. When you run the skeleton observe the contents of the buffer and the values that actually reach the consumer (the rows starting with `Get`).
 
-Solve the producer-consumer problem without using channels. You can make use of semaphores (from [our library](https://godoc.org/github.com/ChrisGora/semaphore) which should be automatically downloaded via the `go.mod` file), mutexes (from the built-in `sync.Mutex`) and condition variables (from `sync.Cond`).
+Solve the producer-consumer problem without using channels. You can make use of semaphores (from [our library](https://pkg.go.dev/github.com/ChrisGora/semaphore) which should be automatically downloaded via the `go.mod` file), mutexes (from the built-in `sync.Mutex`) and condition variables (from `sync.Cond`).
 
 - Your solution must be deadlock-free.
 - Your solution must not have race conditions.
