@@ -177,6 +177,20 @@ How might you improve the buffer methods such that the program is more efficient
 
 ## Question 3 - Bank :red_circle::red_circle::red_circle::red_circle::white_circle:
 
+### Install
+
+Before starting this question, make sure that you have [ffmpeg](https://ffmpeg.org/download.html) and [GraphViz](https://graphviz.org/download/) installed. If you're on Ubuntu/Mac it's as easy as:
+
+Ubuntu: 
+```
+sudo apt install ffmpeg graphviz
+```
+
+Mac:
+```
+brew install ffmpeg graphviz
+```
+
 ### Introduction
 
 Open the `bank` directory. It's a program that simulates a bank.
