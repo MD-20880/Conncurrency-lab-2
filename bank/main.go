@@ -4,38 +4,99 @@ import (
 	"container/list"
 	"flag"
 	"fmt"
+	"github.com/ChrisGora/semaphore"
+	"log"
 	"math/rand"
+	"os"
+	"runtime/trace"
+	"strconv"
 	"time"
 )
 
 var debug *bool
 
 // An executor is a type of a worker goroutine that handles the incoming transactions.
-func executor(bank *bank, executorId int, transactionQueue <-chan transaction, done chan<- bool) {
+func executor(bank *bank, executorId int, transactionQueue <-chan transaction, noSpace semaphore.Semaphore, noWork semaphore.Semaphore, accountInfo map[string]semaphore.Semaphore, done chan bool) {
 	for {
+		noWork.Wait()
 		t := <-transactionQueue
-
 		from := bank.getAccountName(t.from)
 		to := bank.getAccountName(t.to)
+		sendingsema := accountInfo[from]
+		recevingsema := accountInfo[to]
 
 		fmt.Println("Executor\t", executorId, "attempting transaction from", from, "to", to)
 		e := bank.addInProgress(t, executorId) // Removing this line will break visualisations.
 
-		// bank.lockAccount(t.from, strconv.Itoa(executorId))
-		// fmt.Println("Executor\t", executorId, "locked account", from)
-		// bank.lockAccount(t.to, strconv.Itoa(executorId))
-		// fmt.Println("Executor\t", executorId, "locked account", to)
+		bank.lockAccount(t.from, strconv.Itoa(executorId))
+		fmt.Println("Executor\t", executorId, "locked account", from)
+		bank.lockAccount(t.to, strconv.Itoa(executorId))
+		fmt.Println("Executor\t", executorId, "locked account", to)
 
 		bank.execute(t, executorId)
 
-		// bank.unlockAccount(t.from, strconv.Itoa(executorId))
-		// fmt.Println("Executor\t", executorId, "unlocked account", from)
-		// bank.unlockAccount(t.to, strconv.Itoa(executorId))
-		// fmt.Println("Executor\t", executorId, "unlocked account", to)
+		bank.unlockAccount(t.from, strconv.Itoa(executorId))
+		fmt.Println("Executor\t", executorId, "unlocked account", from)
+		bank.unlockAccount(t.to, strconv.Itoa(executorId))
+		fmt.Println("Executor\t", executorId, "unlocked account", to)
 
+		sendingsema.Post()
+		recevingsema.Post()
+		noSpace.Post()
 		bank.removeCompleted(e, executorId) // Removing this line will break visualisations.
 		done <- true
+
 	}
+}
+
+func manager(bank *bank, transactionQueue <-chan transaction, noTransactions int, done chan bool, noWorker int) {
+	noSpace := semaphore.Init(len(bank.accounts)/2+1, len(bank.accounts)/2+1)
+	noWork := semaphore.Init(len(bank.accounts)/2+1, 0)
+	accountsStatus := make(map[string]semaphore.Semaphore)
+	transactionList := make([]transaction, 0)
+	for _, account := range bank.accounts {
+		accountsStatus[account.name] = semaphore.Init(1, 1)
+	}
+	processingTransactions := make(chan transaction, noWorker)
+	for i := 0; i <= noWorker; i++ {
+		go executor(bank, i, processingTransactions, noSpace, noWork, accountsStatus, done)
+	}
+	for no := 0; no < noTransactions; no++ {
+		t := <-transactionQueue
+		transactionList = append(transactionList, t)
+	}
+LOOP:
+	for {
+		sum := 0
+		for account := range accountsStatus {
+			sum += accountsStatus[account].GetValue()
+		}
+		if sum == 0 {
+			noSpace.Wait()
+			continue
+		}
+
+		//get transaction
+		if len(transactionList) == 0 {
+			break LOOP
+		}
+		currentTransaction := transactionList[0]
+
+		from := bank.getAccountName(currentTransaction.from)
+		to := bank.getAccountName(currentTransaction.to)
+
+		if accountsStatus[from].GetValue() == 1 && accountsStatus[to].GetValue() == 1 {
+			noSpace.Wait()
+			accountsStatus[from].Wait()
+			accountsStatus[to].Wait()
+			processingTransactions <- currentTransaction
+			noWork.Post()
+			transactionList = transactionList[1:]
+		} else {
+			transactionList = append(transactionList[1:], transactionList[0])
+		}
+	}
+
 }
 
 func toChar(i int) rune {
@@ -44,6 +105,23 @@ func toChar(i int) rune {
 
 // main creates a bank and executors that will be handling the incoming transactions.
 func main() {
+	//trace
+	f, err := os.Create("trace.out")
+	if err != nil {
+		log.Fatalf("failed to create trace output file: %v", err)
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Fatalf("failed to close trace file: %v", err)
+		}
+	}()
+
+	if err := trace.Start(f); err != nil {
+		log.Fatalf("failed to start trace: %v", err)
+	}
+	defer trace.Stop()
+
+	//trace stop
 	rand.Seed(time.Now().UTC().UnixNano())
 	debug = flag.Bool("debug", false, "generate DOT graphs of the state of the bank")
 	flag.Parse()
@@ -74,9 +152,7 @@ func main() {
 
 	done := make(chan bool)
 
-	for i := 0; i < bankSize; i++ {
-		go executor(&bank, i, transactionQueue, done)
-	}
+	go manager(&bank, transactionQueue, transactions, done, 6)
 
 	for total := 0; total < transactions; total++ {
 		fmt.Println("Completed transactions\t", total)

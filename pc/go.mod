@@ -1,5 +1,5 @@
 module pc
 
-go 1.12
+go 1.15
 
-require github.com/ChrisGora/semaphore v1.0.0 // indirect
+require github.com/ChrisGora/semaphore v1.0.0
