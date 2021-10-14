@@ -67,15 +67,6 @@ func manager(bank *bank, transactionQueue <-chan transaction, noTransactions int
 	}
 LOOP:
 	for {
-		sum := 0
-		for account := range accountsStatus {
-			sum += accountsStatus[account].GetValue()
-		}
-		if sum == 0 {
-			noSpace.Wait()
-			continue
-		}
-
 		//get transaction
 		if len(transactionList) == 0 {
 			break LOOP
@@ -106,25 +97,7 @@ func toChar(i int) rune {
 // main creates a bank and executors that will be handling the incoming transactions.
 func main() {
 	//trace
-	f, err := os.Create("trace.out")
-	if err != nil {
-		log.Fatalf("failed to create trace output file: %v", err)
-	}
-	defer func() {
-		if err := f.Close(); err != nil {
-			log.Fatalf("failed to close trace file: %v", err)
-		}
-	}()
-
-	if err := trace.Start(f); err != nil {
-		log.Fatalf("failed to start trace: %v", err)
-	}
-	defer trace.Stop()
-
-	//trace stop
-	rand.Seed(time.Now().UTC().UnixNano())
-	debug = flag.Bool("debug", false, "generate DOT graphs of the state of the bank")
-	flag.Parse()
+	//traceData()
 
 	bankSize := 6 // Must be even for correct visualisation.
 	transactions := 1000
@@ -173,4 +146,26 @@ func main() {
 	} else {
 		fmt.Println("The bank works!")
 	}
+}
+
+func traceData() {
+	f, err := os.Create("trace.out")
+	if err != nil {
+		log.Fatalf("failed to create trace output file: %v", err)
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Fatalf("failed to close trace file: %v", err)
+		}
+	}()
+
+	if err := trace.Start(f); err != nil {
+		log.Fatalf("failed to start trace: %v", err)
+	}
+	defer trace.Stop()
+
+	//trace stop
+	rand.Seed(time.Now().UTC().UnixNano())
+	debug = flag.Bool("debug", false, "generate DOT graphs of the state of the bank")
+	flag.Parse()
 }
